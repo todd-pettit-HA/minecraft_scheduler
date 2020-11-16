@@ -1,0 +1,43 @@
+---
+Resources:
+  MinecraftStorageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: BucketOwnerFullControl
+      BucketName: minecraft-storage-bucket
+      VersioningConfiguration: 
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+        - NoncurrentVersionExpirationInDays: 30
+          Status: Enabled
+
+  MinecraftServerRole: 
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+            - 'sts:AssumeRole'
+      RoleName: !Join [ "", [ !Ref AWS::Region, "MinecraftServerRole" ] ]
+
+  MinecraftServerPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: AccessMinecraftBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Action: [s3:ListBucket]
+          Resource: [!GetAtt MinecraftStorageBucket.Arn]
+        - Effect: Allow
+          Action: [s3:PutObject, s3:GetObject]
+          Resource: !Join [ "", [ !GetAtt MinecraftStorageBucket.Arn, /* ] ]
+      Roles:
+      - !Ref MinecraftServerRole

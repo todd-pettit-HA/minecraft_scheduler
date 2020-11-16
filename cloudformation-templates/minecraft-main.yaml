@@ -1,0 +1,35 @@
+---
+Resources:
+  MinecraftServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: us-east-1a
+      InstanceType: m3.large
+      ImageId: ami-0885b1f6bd170450c
+      SecurityGroups:
+      - !Ref MinecraftSecurityGroup
+      IamInstanceProfile: !Ref InstanceProfile
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles: [ !Join [ "", [ !Ref AWS::Region, "MinecraftServerRole" ] ] ]
+  MinecraftSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group defined to allow inbound minecraft traffic.
+      GroupName: Minecraft Security Group
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 25565
+        ToPort: 25565
+        CidrIp: 0.0.0.0/0
+  ServerDnsRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: Z08490582ICJOL9950BTD
+      Type: A
+      TTL: 60
+      Name: minecraft.apothos-hosting.com
+      ResourceRecords:
+      - Fn::GetAtt: [ MinecraftServer, PublicIp ]
